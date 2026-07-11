@@ -1,38 +1,99 @@
-# vaultify
-# 🚀 Vaultify (Work In Progress)
+# Vaultify v3 Rebuild
 
-A full-stack Retrieval-Augmented Generation (RAG) ecosystem with Model Context Protocol (MCP) server integration, high-performance Qdrant vector storage, and sub-second LLM inference via Groq API.
+Vaultify is a multi-tenant document intelligence platform built with Flask, Docling, Sentence Transformers, Qdrant Cloud, Groq, and MCP.
 
-> ⚠️ **Development Status:** This project is currently under active RAG/Agentic research and development. The repository currently hosts the core experimental pipeline (`vaultify (2).ipynb`). Refactoring into a modular Flask/FastAPI backend architecture is actively underway.
+This branch-ready checkpoint consolidates the working Colab prototype into a normal Python project. It preserves the verified Phase 1–3.5B behavior while removing the need to execute more than 65 notebook cells.
 
----
+## Current verified capabilities
 
-## 🏗️ Architecture & Core Components
+- PDF parsing with Docling
+- Token-safe text and table chunking
+- Normalized 384-dimensional embeddings
+- Deterministic Qdrant point IDs
+- Mandatory tenant filtering
+- Grounded Groq answers
+- Streamable HTTP MCP server
+- User registration, login, logout, and hashed passwords
+- Organizations, memberships, and role authorization
+- Trusted tenant resolution from server-side membership
+- Secure PDF validation and duplicate prevention
+- Tenant-scoped ingestion with status transitions and retry support
+- Dark responsive dashboard foundation
 
-Vaultify bridges the gap between static knowledge bases and autonomous AI agents using a 3-layer architecture:
+## Project structure
 
-1. **Ingestion & Vector Pipeline:** Documents are chunked, embedded using optimized open-source sentence transformers, and upserted into **Qdrant Vector DB** for ultra-fast semantic search.
-2. **MCP Integration:** Implements a standardized **Model Context Protocol (MCP)** server, enabling next-gen AI tools (like Cursor, Claude Desktop, and autonomous agents) to securely fetch and interact with the internal context.
-3. **Inference & Orchestration:** Orchestrated via **LangChain** and powered by **Groq API** to deliver context-aware, low-latency completions.
-4. **Secure Tunneling:** Architected for production-like remote access utilizing **Cloudflare Tunnels** and deployed via **Render**.
+```text
+app/
+├── auth/
+├── dashboard/
+├── documents/
+├── mcp/
+├── organizations/
+├── rag/
+├── templates/
+├── static/
+├── authorization.py
+├── models.py
+└── rag_runtime.py
+notebooks/
+scripts/
+tests/
+run.py
+run_mcp.py
+requirements.txt
+```
 
----
+## Local setup
 
-## 🛠️ Tech Stack
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+```
 
-- **Frameworks & Orchestration:** LangChain (LCEL), Model Context Protocol (MCP)
-- **Vector Database:** Qdrant DB
-- **LLM Compute & Inference:** Groq Cloud API
-- **Deployment & Infra:** Cloudflare Tunnels, Render, Python (Jupyter Ecosystem)
+Set these secrets in the environment:
 
----
+```text
+QDRANT_URL
+QDRANT_API_KEY
+GROQ_API_KEY
+VAULTIFY_SECRET_KEY
+```
 
-## 📅 Roadmap / Upcoming Features
-- [ ] Migrate Jupyter experimental blocks into a structured Flask/FastAPI backend setup.
-- [ ] Add explicit Multi-Agent orchestration layers for automated context reasoning.
-- [ ] Containerize the full ecosystem with Docker for single-command deployments.
-- [ ] Implement secure webhook integrations and payment gateways.
+Run the web application:
 
----
-## 📄 License
-MIT — see LICENSE.
+```bash
+python run.py
+```
+
+Run the tenant-bound MCP server:
+
+```bash
+export VAULTIFY_MCP_TENANT_ID=tenant_example
+python run_mcp.py
+```
+
+The MCP client never supplies `tenant_id`. The tenant is fixed by trusted server configuration.
+
+## Colab
+
+Use `notebooks/Vaultify_Launch.ipynb`. It reduces startup to a small set of cells:
+
+1. Clone and install
+2. Load Colab Secrets
+3. Start the web application
+4. Open a Cloudflare Quick Tunnel
+5. Optionally start MCP
+
+## Security notes
+
+- Never commit `.env`, API keys, SQLite databases, or uploaded PDFs.
+- Quick Tunnels are development-only and temporary.
+- Set `VAULTIFY_SECURE_COOKIES=1` behind production HTTPS.
+- The current upload pipeline is synchronous; a production job queue remains on the roadmap.
+- The current MCP runner is server-bound to one trusted tenant. Per-credential tenant resolution remains a later phase.
+
+## Source checkpoint
+
+The original development notebook and Python export are preserved under `notebooks/` for auditability and regression recovery.
