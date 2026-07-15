@@ -26,7 +26,7 @@ Most RAG demos assume one user and one shared document collection. Vaultify was 
 
 > A user must only retrieve documents belonging to an organization they are authorized to access.
 
-The tenant identifier is therefore resolved from the authenticated server-side membership. It is never accepted from a user-controlled question form or MCP tool argument.
+The tenant identifier is resolved from authenticated server-side membership. It is never accepted from a user-controlled question form or MCP tool argument.
 
 ---
 
@@ -104,26 +104,26 @@ Validated grounded-answer examples:
 
 ```mermaid
 flowchart LR
-    U[Authenticated User] --> W[Flask Web Application]
-    M[MCP Client] --> S[FastMCP Server]
+    user["Authenticated User"] --> web["Flask Web App"]
+    client["MCP Client"] --> mcp["FastMCP Server"]
 
-    W --> A[Membership & Tenant Resolution]
-    S --> A
+    web --> tenant["Membership and Tenant Resolution"]
+    mcp --> tenant
 
-    A --> Q[Qdrant Tenant-Filtered Retrieval]
-    Q --> G[Groq Grounded Generation]
-    G --> W
-    G --> S
+    tenant --> search["Tenant-Filtered Qdrant Retrieval"]
+    search --> llm["Groq Grounded Generation"]
+    llm --> web
+    llm --> mcp
 
-    U --> P[Secure PDF Upload]
-    P --> V[Signature, MIME & Hash Validation]
-    V --> D[Docling Parsing]
-    D --> C[Token-Safe Text/Table Chunking]
-    C --> E[Sentence Transformer Embeddings]
-    E --> QD[(Qdrant Cloud)]
+    user --> upload["Secure PDF Upload"]
+    upload --> validation["Signature, MIME and Hash Validation"]
+    validation --> parsing["Docling Parsing"]
+    parsing --> chunking["Token-Safe Text and Table Chunking"]
+    chunking --> embedding["Sentence Transformer Embeddings"]
+    embedding --> qdrant[("Qdrant Cloud")]
 
-    DB[(SQLAlchemy Database)] --> W
-    W --> DB
+    database[("SQLAlchemy Database")] --> web
+    web --> database
 ```
 
 ### Query path
@@ -168,36 +168,26 @@ PDF upload
 
 ## Repository branches
 
-The repository separates the auditable development history from the modular rebuild.
-
 | Branch | Purpose |
 |---|---|
-| [`main`](https://github.com/IhabAltekreeti/vaultify/tree/main) | Project overview and stable repository landing page |
+| [`main`](https://github.com/IhabAltekreeti/vaultify/tree/main) | Stable repository landing page and full development notebook |
 | [`vaultify-colab-full`](https://github.com/IhabAltekreeti/vaultify/tree/vaultify-colab-full) | Full Colab development notebook and Python export |
-| [`vaultify-v3-rebuild`](https://github.com/IhabAltekreeti/vaultify/tree/vaultify-v3-rebuild) | Ongoing modular Flask/MCP project rebuild |
-
-The full development snapshot currently includes:
-
-```text
-vaultify_full.ipynb
-vaultify_full.py
-```
+| [`vaultify-v3-rebuild`](https://github.com/IhabAltekreeti/vaultify/tree/vaultify-v3-rebuild) | Ongoing modular Flask/MCP rebuild |
 
 The compact launcher notebook is being stabilized before it becomes the recommended execution path.
 
 ---
 
-## Development workflow
+## Quick start
 
-Clone the repository and switch to the full Colab branch:
+Clone the repository:
 
 ```bash
 git clone https://github.com/IhabAltekreeti/vaultify.git
 cd vaultify
-git checkout vaultify-colab-full
 ```
 
-Open `vaultify_full.ipynb` in Google Colab and configure the required secrets through **Colab Secrets**:
+Open `notebooks/vaultify_full.ipynb` in Google Colab and configure these required Colab Secrets:
 
 ```text
 QDRANT_URL
@@ -211,7 +201,7 @@ Optional application secret:
 FLASK_SECRET_KEY
 ```
 
-> Do not commit API keys, `.env` files, SQLite databases, uploaded PDFs, or generated credentials.
+> Never commit API keys, `.env` files, SQLite databases, uploaded PDFs, or generated credentials.
 
 ---
 
@@ -224,13 +214,13 @@ A comparison between the validated seed pipeline and a newer web-upload pipeline
 | Validated seed pipeline | 140 | 4 | 0 | 240 |
 | Web-upload audit | 293 | 4 | 84 | 778 |
 
-The audit showed that long inputs could be silently truncated by the embedding tokenizer rather than rejected. The web ingestion pipeline is therefore being replaced with a hard-validated chunker that targets:
+The audit showed that long inputs could be silently truncated by the embedding tokenizer rather than rejected. The web ingestion pipeline is therefore being replaced with a hard-validated chunker targeting:
 
 - A maximum of 240 tokens per chunk
 - Exact duplicate removal before embedding
 - Table-header preservation
 - Safe splitting of oversized table rows
-- A final hard validation before Qdrant writes
+- Final validation before Qdrant writes
 
 The audited 293-chunk strategy is **not considered final**.
 
