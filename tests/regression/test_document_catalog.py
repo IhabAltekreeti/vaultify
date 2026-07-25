@@ -1,3 +1,5 @@
+import pytest
+
 from vaultify.services.document_catalog import build_document_catalog
 
 
@@ -118,3 +120,32 @@ def test_unknown_customer_document_uses_generic_filename_fallback():
     assert registry["Acme Logistics 2026 Report"]["aliases"] == [
         "acme logistics 2026 report"
     ]
+
+
+def test_document_catalog_rejects_cross_tenant_chunks():
+    trusted_tenant = "tenant_trusted"
+    chunks = [
+        make_chunk(
+            point_id="trusted",
+            tenant_id=trusted_tenant,
+            filename="trusted.pdf",
+            document_hash="trusted_hash",
+            chunk_index=0,
+            chunk_type="text",
+            section="Overview",
+            text="Trusted tenant document.",
+        ),
+        make_chunk(
+            point_id="attacker",
+            tenant_id="tenant_attacker",
+            filename="attacker.pdf",
+            document_hash="attacker_hash",
+            chunk_index=0,
+            chunk_type="text",
+            section="Overview",
+            text="Attacker tenant document.",
+        ),
+    ]
+
+    with pytest.raises(ValueError, match="outside the trusted tenant"):
+        build_document_catalog(chunks, trusted_tenant)
