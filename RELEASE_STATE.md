@@ -6,7 +6,7 @@
 - Golden baseline commit: `53eb736646ecf88c8551a490606014ed5307b6ae`
 - Phase 3.8: CLOSED
 - R1 Release Extraction: IN PROGRESS
-- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 12
+- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 13
 
 ## Source-of-truth rule
 1. Golden notebook saved code + outputs
@@ -31,6 +31,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Step 10 — Dense + BM25 + RRF critical hybrid regression: PASS
 - Step 11 — deterministic Query Analyzer V1: PASS
 - Step 12 — tenant document catalog + entity registry: PASS
+- Step 13 — entity-routed hybrid retrieval: PASS
 
 ## Validation evidence
 ### Flask security gate
@@ -51,7 +52,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Qdrant Cloud connection PASS; `vaultify_v3_documents` found.
 - Factory timeout reconciled to golden runtime value: 60 seconds.
 - Step 9 observed: Apple tenant 745 chunks; Tesla tenant 140 chunks; point sets disjoint.
-- Steps 7–12 created, updated, or deleted no Qdrant points.
+- Steps 7–13 created, updated, or deleted no Qdrant points.
 
 ### Groq
 - Secret loaded only through the Colab control-panel adapter.
@@ -77,8 +78,17 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Documents group by `document_hash` when available, otherwise by normalized filename.
 - Catalog records preserve tenant, filename, hash, chunk counts, chunk types, years, sections, entities, aliases, and normalized chunks.
 - Application runtime is generic: entity rules are caller-supplied and unknown customer files use a readable filename-derived fallback.
-- Catalog builder now fails closed if a supplied chunk belongs to a different tenant.
+- Catalog builder fails closed if a supplied chunk belongs to a different tenant.
 - Live Step 12 PASS: Apple tenant 745 chunks / 2 documents; Tesla tenant 140 chunks / 1 document; canonical cross-tenant files did not leak.
+
+### Entity-routed hybrid retrieval
+- Golden Cell 21C/21C.1 routing behavior is extracted into `services/entity_routing.py`.
+- One Dense + BM25 hybrid index is prepared per entity; routes search only the selected entity's registered documents.
+- Metric expansions preserve the canonical Apple/Tesla financial regression behavior without hardcoding tenant IDs.
+- Mixed-corpus tenant live PASS: Apple and Tesla questions routed independently; comparison produced separate Apple/Tesla routes; `$416,161M` and `$24,901M` evidence reached routed top-6.
+- Strict Tesla tenant rejected Apple retrieval.
+- Ambiguous and outside-corpus questions stop before retrieval in committed regression.
+- The first live Step 13 cell incorrectly treated the historical mixed corpus as Apple-only; corrected semantics distinguish tenant isolation from entity routing.
 
 ## Flask evidence-gap status
 The missing canonical Cell 22D / stale `FLASK_REQUEST_FLOW_REGRESSION_PASSED` evidence gap is CLOSED for extracted code by `tests/regression/test_flask_request_flow.py`.
@@ -101,20 +111,21 @@ This does not prove live Qdrant/Groq/V2 answer orchestration; those remain separ
 - `src/vaultify/services/retrieval.py`
 - `src/vaultify/services/query_analyzer.py`
 - `src/vaultify/services/document_catalog.py`
+- `src/vaultify/services/entity_routing.py`
 - `tests/regression/test_flask_request_flow.py`
 - `tests/regression/test_query_analyzer.py`
 - `tests/regression/test_document_catalog.py`
+- `tests/regression/test_entity_routing.py`
 - `notebooks/Vaultify_R1_Control_Panel.ipynb`
 
 ## Test-evidence boundary
-- Committed pytest covers Flask request-flow security, Query Analyzer V1, document catalog shape, generic fallback, and cross-tenant catalog rejection.
-- Steps 6–12 also include explicit Colab regression evidence where live external services are required.
+- Committed pytest covers Flask request-flow security, Query Analyzer V1, document catalog safety, and entity-routing control flow.
+- Steps requiring live Qdrant/model behavior also include explicit Colab regression evidence.
 - The Step 10 import failure was Python module caching after `git pull`; module reload resolved it and the actual hybrid regression passed.
-- The first Step 12 live cell incorrectly assumed Tesla canonical data existed in the Apple tenant; the corrected live test validates Apple and Tesla tenants independently.
+- The corrected Step 12/13 live tests use the actual historical tenant layout instead of assuming the mixed corpus is Apple-only.
 
 ## Intentionally not extracted yet
-- entity-routed retrieval
-- V2 reranking / evidence selection
+- structured evidence verification / evidence selection
 - answer orchestration / grounded answer service
 - ingestion / Docling / OCR
 - upload and full document-management routes
@@ -130,7 +141,7 @@ This does not prove live Qdrant/Groq/V2 answer orchestration; those remain separ
 - Branch is a clean forward extraction from the golden baseline; golden files were not modified by R1.
 - Current modules are responsibility-based, not notebook-cell copies.
 - Qdrant timeout parity and Groq helper wording were reconciled; no product feature was added.
-- Apple/Tesla remain regression fixtures; the runtime catalog and analyzer accept dynamic tenant data and registries.
+- Apple/Tesla remain regression fixtures; runtime catalog, analyzer, and routing accept dynamic tenant data and registries.
 
 ## Guardrails from this checkpoint onward
 - GitHub is source/control infrastructure, not the project goal.
