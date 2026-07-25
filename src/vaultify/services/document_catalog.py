@@ -65,12 +65,35 @@ def aliases_for_entities(entities, *, entity_rules=None):
     return sorted(aliases)
 
 
+def validate_tenant_chunks(chunks, tenant_id):
+    """Fail closed if a catalog input contains chunks from another tenant."""
+    mismatched_chunks = [
+        chunk
+        for chunk in chunks
+        if chunk.get("tenant_id") != tenant_id
+    ]
+
+    if mismatched_chunks:
+        observed_tenants = sorted(
+            {
+                str(chunk.get("tenant_id"))
+                for chunk in mismatched_chunks
+            }
+        )
+        raise ValueError(
+            "Document catalog input contains chunks outside the trusted tenant: "
+            + ", ".join(observed_tenants)
+        )
+
+
 def build_document_catalog(chunks, tenant_id, *, entity_rules=None):
-    """Build the golden Cell 21A-style document catalog for one tenant."""
+    """Build the golden Cell 21A-style document catalog for one trusted tenant."""
     if not tenant_id:
         raise ValueError("A tenant ID is required to build the document catalog.")
     if not chunks:
         raise ValueError("At least one tenant chunk is required.")
+
+    validate_tenant_chunks(chunks, tenant_id)
 
     entity_rules = entity_rules or {}
     document_groups = defaultdict(list)
