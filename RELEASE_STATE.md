@@ -6,7 +6,7 @@
 - Golden baseline commit: `53eb736646ecf88c8551a490606014ed5307b6ae`
 - Phase 3.8 historical milestone: CLOSED
 - R1 Release Extraction: IN PROGRESS
-- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 17
+- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 18
 
 ## Source-of-truth rule
 1. Golden notebook saved code + outputs
@@ -36,6 +36,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Step 15 — grounded answer generation + clean `answer_question_v2`: PASS
 - Step 16 — context-aware financial unit resolution: PASS
 - Step 17 — clean V2 Flask compatibility adapter: PASS
+- Step 18 — real Flask `test_client()` → clean V2 integration: PASS
 
 ## Core V2 engine status
 Golden Cell 21 series is represented in clean modules:
@@ -54,7 +55,7 @@ Golden Cell 21 series is represented in clean modules:
 - Ambiguous questions require clarification before LLM generation.
 - Outside-corpus questions return no-answer without LLM generation.
 - Runtime tenant mismatch fails closed before retrieval.
-- No Step 7–17 regression created, updated, or deleted Qdrant points.
+- No Step 7–18 regression created, updated, or deleted Qdrant points.
 
 ### Unit-resolution parity
 - Apple selected evidence originally lacked explicit scale in the same chunk.
@@ -63,12 +64,13 @@ Golden Cell 21 series is represented in clean modules:
 - Tesla preserved its already-explicit `USD millions` classification.
 
 ## Flask / web integration status
-- Extracted Flask auth/membership `/ask` wiring has a deterministic security regression.
 - Browser-controlled tenant/org values cannot override trusted membership tenant.
-- Historical canonical Cell 22D did not exist as a saved notebook cell; the extracted security regression closes that evidence gap for clean code.
-- Step 17 adapter converts clean V2 source cards into the legacy Flask `results` contract without exposing browser-controlled runtime tenant selection.
-- Live Step 17 PASS: Apple, Tesla, comparison, clarification, no-answer, source serialization, and tenant mismatch behavior passed through the adapter.
-- Real `Flask.test_client()` → clean V2 integration is the next gate.
+- Historical canonical Cell 22D did not exist as a saved notebook cell; the extracted clean regression is its replacement evidence, not a reconstructed historical cell.
+- Step 17 adapter converts clean V2 source cards into the Flask `results` contract.
+- Step 18 committed regression PASS after correcting a synthetic Tesla fixture to canonical table evidence.
+- Step 18 live PASS: login → trusted membership → `/ask` → clean V2 → rendered sources → `QueryLog`.
+- Live filenames are registry-driven (`TSLA-Q4-2025-Update.pdf` in the current corpus), not hardcoded product behavior.
+- Browser session/form tenant tampering could not change the trusted tenant selected by Flask.
 
 ## Extracted runtime surface
 - `src/vaultify/config.py`
@@ -92,13 +94,12 @@ Golden Cell 21 series is represented in clean modules:
 - `notebooks/Vaultify_R1_Control_Panel.ipynb`
 
 ## Test-evidence boundary
-- Committed pytest covers Flask request-flow security plus deterministic analyzer/catalog/routing/evidence/unit/adapter behavior.
+- Committed pytest covers Flask request-flow security plus deterministic analyzer/catalog/routing/evidence/unit/adapter/Flask-V2 behavior.
 - Live Colab regressions cover Qdrant/model-dependent behavior.
 - Long-lived Colab runtimes must reload changed modules after `git pull` or restart the runtime.
 
 ## Intentionally not extracted / completed yet
-- real Flask `test_client()` → clean V2 integration gate
-- ingestion / Docling / OCR
+- canonical V2 ingestion core / Docling / OCR
 - upload and full document-management routes
 - ConnectorCredential release model
 - OAuth
@@ -108,9 +109,12 @@ Golden Cell 21 series is represented in clean modules:
 - stable deployment configuration
 - Phase 3.9 product work
 
+## Next bounded unit
+- Step 19 — extract the final approved canonical ingestion core: PDF validation, Canonical Chunker V2, deterministic tenant/document payloads, safe replace-on-reindex behavior, and failure cleanup.
+
 ## Guardrails
 - Golden notebook remains immutable.
-- Do not redesign working retrieval, OAuth, MCP, or security behavior during extraction.
+- Do not redesign working retrieval, ingestion, OAuth, MCP, or security behavior during extraction.
 - Split by responsibility, not arbitrary line count.
 - Continue as one bounded extraction unit → regression → PASS/FAIL → next unit.
 - Apple/Tesla remain regression fixtures; runtime services accept dynamic tenant data and registries.
