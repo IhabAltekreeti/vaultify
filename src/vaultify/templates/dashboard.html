@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <body>
+    <h1>Vaultify</h1>
+    <div id="organization">{{ current_org.name }}</div>
+    <div id="tenant">{{ current_org.tenant_id }}</div>
+    <div id="document-count">{{ document_count }}</div>
+    <div id="chunk-count">{{ chunk_count }}</div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div data-category="{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="post" action="{{ url_for('ask') }}">
+      <input name="question" type="text">
+      <button type="submit">Ask</button>
+    </form>
+
+    {% if question %}<div id="question">{{ question }}</div>{% endif %}
+    {% if answer %}<div id="answer">{{ answer }}</div>{% endif %}
+
+    {% if sources %}
+      <ul id="sources">
+      {% for source in sources %}
+        <li>{{ source.filename }} — {{ source.section }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('logout') }}">
+      <button type="submit">Sign out</button>
+    </form>
+  </body>
+</html>
