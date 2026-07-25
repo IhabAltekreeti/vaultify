@@ -6,7 +6,7 @@
 - Golden baseline commit: `53eb736646ecf88c8551a490606014ed5307b6ae`
 - Phase 3.8: CLOSED
 - R1 Release Extraction: IN PROGRESS
-- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 11
+- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 12
 
 ## Source-of-truth rule
 1. Golden notebook saved code + outputs
@@ -30,6 +30,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Step 9 — tenant-scoped Qdrant corpus loading: PASS
 - Step 10 — Dense + BM25 + RRF critical hybrid regression: PASS
 - Step 11 — deterministic Query Analyzer V1: PASS
+- Step 12 — tenant document catalog + entity registry: PASS
 
 ## Validation evidence
 ### Flask security gate
@@ -50,7 +51,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Qdrant Cloud connection PASS; `vaultify_v3_documents` found.
 - Factory timeout reconciled to golden runtime value: 60 seconds.
 - Step 9 observed: Apple tenant 745 chunks; Tesla tenant 140 chunks; point sets disjoint.
-- Steps 7–10 created, updated, or deleted no Qdrant points.
+- Steps 7–12 created, updated, or deleted no Qdrant points.
 
 ### Groq
 - Secret loaded only through the Colab control-panel adapter.
@@ -70,6 +71,14 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Entity registry is supplied as a dependency; application code does not hardcode Apple/Tesla tenants.
 - Apple single-entity, Tesla single-entity, comparison decomposition, ambiguity clarification, and outside-corpus no-answer candidate regression passed.
 - No embedding, Qdrant, or Groq call is required for query planning.
+
+### Tenant document catalog / entity registry
+- Golden Cell 21A-style document grouping is extracted into `services/document_catalog.py`.
+- Documents group by `document_hash` when available, otherwise by normalized filename.
+- Catalog records preserve tenant, filename, hash, chunk counts, chunk types, years, sections, entities, aliases, and normalized chunks.
+- Application runtime is generic: entity rules are caller-supplied and unknown customer files use a readable filename-derived fallback.
+- Catalog builder now fails closed if a supplied chunk belongs to a different tenant.
+- Live Step 12 PASS: Apple tenant 745 chunks / 2 documents; Tesla tenant 140 chunks / 1 document; canonical cross-tenant files did not leak.
 
 ## Flask evidence-gap status
 The missing canonical Cell 22D / stale `FLASK_REQUEST_FLOW_REGRESSION_PASSED` evidence gap is CLOSED for extracted code by `tests/regression/test_flask_request_flow.py`.
@@ -91,18 +100,19 @@ This does not prove live Qdrant/Groq/V2 answer orchestration; those remain separ
 - `src/vaultify/services/llm.py`
 - `src/vaultify/services/retrieval.py`
 - `src/vaultify/services/query_analyzer.py`
+- `src/vaultify/services/document_catalog.py`
 - `tests/regression/test_flask_request_flow.py`
 - `tests/regression/test_query_analyzer.py`
+- `tests/regression/test_document_catalog.py`
 - `notebooks/Vaultify_R1_Control_Panel.ipynb`
 
 ## Test-evidence boundary
-- Committed pytest covers the Flask request-flow security gate and Query Analyzer V1 regression.
-- Steps 6–10 were validated through explicit Colab regression cells with observed PASS outputs.
-- These live checks are recorded release evidence but are not all committed pytest tests yet.
+- Committed pytest covers Flask request-flow security, Query Analyzer V1, document catalog shape, generic fallback, and cross-tenant catalog rejection.
+- Steps 6–12 also include explicit Colab regression evidence where live external services are required.
 - The Step 10 import failure was Python module caching after `git pull`; module reload resolved it and the actual hybrid regression passed.
+- The first Step 12 live cell incorrectly assumed Tesla canonical data existed in the Apple tenant; the corrected live test validates Apple and Tesla tenants independently.
 
 ## Intentionally not extracted yet
-- tenant document catalog / entity registry runtime
 - entity-routed retrieval
 - V2 reranking / evidence selection
 - answer orchestration / grounded answer service
@@ -119,13 +129,13 @@ This does not prove live Qdrant/Groq/V2 answer orchestration; those remain separ
 ## Reconciliation findings
 - Branch is a clean forward extraction from the golden baseline; golden files were not modified by R1.
 - Current modules are responsibility-based, not notebook-cell copies.
-- Largest extracted application module is `services/retrieval.py` at roughly 455 lines, not a multi-thousand-line block.
 - Qdrant timeout parity and Groq helper wording were reconciled; no product feature was added.
+- Apple/Tesla remain regression fixtures; the runtime catalog and analyzer accept dynamic tenant data and registries.
 
 ## Guardrails from this checkpoint onward
 - GitHub is source/control infrastructure, not the project goal.
-- Main goal: turn the ~36–37k-line golden notebook/Python export into a clean, modular, readable Vaultify codebase.
-- Split by responsibility, not arbitrary line count; prefer a few hundred readable lines where natural.
+- Main goal: turn the golden notebook/export into a clean, modular, readable Vaultify codebase.
+- Split by responsibility, not arbitrary line count.
 - Do not redesign working retrieval, OAuth, MCP, or security behavior during extraction.
 - Do not start Phase 3.9 or drift into persistence/deployment while cleaning the monolith.
 - Continue only as: one logical extraction unit → regression → PASS/FAIL → next unit.
