@@ -16,13 +16,20 @@ class EmbeddingService:
         vectors = self.model.encode(
             list(texts),
             batch_size=batch_size,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
             show_progress_bar=show_progress_bar,
         )
         self._validate_dimension(vectors)
         return vectors
 
     def encode_query(self, question):
-        vector = self.model.encode(question)
+        vector = self.model.encode(
+            [question],
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+        )[0]
         self._validate_dimension(vector)
         return vector
 
