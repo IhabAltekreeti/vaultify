@@ -6,8 +6,7 @@
 - Golden baseline commit: `53eb736646ecf88c8551a490606014ed5307b6ae`
 - Phase 3.8: CLOSED
 - R1 Release Extraction: IN PROGRESS
-- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 10
-- Extraction is PAUSED here until explicit approval to continue.
+- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 11
 
 ## Source-of-truth rule
 1. Golden notebook saved code + outputs
@@ -30,6 +29,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Step 8 — Groq runtime + Colab secret adapter: PASS
 - Step 9 — tenant-scoped Qdrant corpus loading: PASS
 - Step 10 — Dense + BM25 + RRF critical hybrid regression: PASS
+- Step 11 — deterministic Query Analyzer V1: PASS
 
 ## Validation evidence
 ### Flask security gate
@@ -65,6 +65,12 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Critical live regression PASS: Apple canonical chunks 609; Tesla canonical chunks 140; Apple `$416,161M` and Tesla `$24,901M` evidence reached top-6; tenant identity stayed intact.
 - IMPORTANT: Step 10 reran the two critical canonical questions, not every historical Cell 19B benchmark case.
 
+### Query Analyzer V1
+- Golden Cell 21B deterministic analyzer behavior is preserved.
+- Entity registry is supplied as a dependency; application code does not hardcode Apple/Tesla tenants.
+- Apple single-entity, Tesla single-entity, comparison decomposition, ambiguity clarification, and outside-corpus no-answer candidate regression passed.
+- No embedding, Qdrant, or Groq call is required for query planning.
+
 ## Flask evidence-gap status
 The missing canonical Cell 22D / stale `FLASK_REQUEST_FLOW_REGRESSION_PASSED` evidence gap is CLOSED for extracted code by `tests/regression/test_flask_request_flow.py`.
 
@@ -84,17 +90,20 @@ This does not prove live Qdrant/Groq/V2 answer orchestration; those remain separ
 - `src/vaultify/services/qdrant.py`
 - `src/vaultify/services/llm.py`
 - `src/vaultify/services/retrieval.py`
+- `src/vaultify/services/query_analyzer.py`
 - `tests/regression/test_flask_request_flow.py`
+- `tests/regression/test_query_analyzer.py`
 - `notebooks/Vaultify_R1_Control_Panel.ipynb`
 
 ## Test-evidence boundary
-- Committed pytest currently contains the Flask request-flow security gate.
+- Committed pytest covers the Flask request-flow security gate and Query Analyzer V1 regression.
 - Steps 6–10 were validated through explicit Colab regression cells with observed PASS outputs.
 - These live checks are recorded release evidence but are not all committed pytest tests yet.
 - The Step 10 import failure was Python module caching after `git pull`; module reload resolved it and the actual hybrid regression passed.
 
 ## Intentionally not extracted yet
-- query analyzer / entity routing
+- tenant document catalog / entity registry runtime
+- entity-routed retrieval
 - V2 reranking / evidence selection
 - answer orchestration / grounded answer service
 - ingestion / Docling / OCR
