@@ -37,7 +37,7 @@ def serialize_sources(results, limit=5):
 
 
 def create_app(*, services, config=None):
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder="../templates")
     app.config.update(
         SECRET_KEY="development-only-change-me",
         SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
