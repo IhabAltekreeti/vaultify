@@ -56,7 +56,7 @@ def make_chunk(*, point_id, tenant_id, filename, document_hash, text, section):
         "filename": filename,
         "document_hash": document_hash,
         "chunk_index": 0,
-        "chunk_type": "text",
+        "chunk_type": "table",
         "section": section,
         "text": text,
         "payload": {},
@@ -73,8 +73,8 @@ def test_real_flask_route_uses_clean_v2_answer_engine():
             document_hash="apple_hash",
             section="Note 2 - Revenue",
             text=(
-                "Apple Inc. Dollars in millions. Fiscal year 2025 total net sales "
-                "were 416,161."
+                "Apple Inc. Dollars in millions | 2025 | 2024 | 2023 | "
+                "Total net sales | 416,161 | 391,035 | 383,285 |"
             ),
         ),
         make_chunk(
@@ -84,7 +84,8 @@ def test_real_flask_route_uses_clean_v2_answer_engine():
             document_hash="tesla_hash",
             section="Financial Statements",
             text=(
-                "Tesla Inc. Dollars in millions. Q4 2025 total revenue was 24,901."
+                "Tesla Inc. Dollars in millions | Q4-2025 | Q3-2025 | Q4-2024 | "
+                "Total revenues | 24,901 | 28,095 | 25,707 |"
             ),
         ),
     ]
