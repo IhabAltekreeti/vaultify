@@ -2,6 +2,7 @@ import numpy as np
 
 from vaultify.services.document_catalog import build_document_catalog
 from vaultify.services.entity_routing import (
+    build_routed_retrieval_query,
     prepare_entity_retrieval_indexes,
     retrieval_context_contains_groups,
     route_query_v1,
@@ -62,6 +63,23 @@ def make_chunk(point_id, filename, document_hash, chunk_index, text):
         "text": text,
         "payload": {},
     }
+
+
+def test_aggregate_metric_expansion_preserves_golden_cell_21c1_patch():
+    query = build_routed_retrieval_query(
+        {
+            "entity": "Apple",
+            "metric": {
+                "canonical": "net_sales",
+                "label": "net sales",
+            },
+            "period": {
+                "label": "fiscal year 2025",
+            },
+        }
+    )
+
+    assert query == "Apple fiscal year 2025 total net sales net sales"
 
 
 def test_entity_routed_hybrid_retrieval_matches_golden_control_flow():
@@ -147,6 +165,12 @@ def test_entity_routed_hybrid_retrieval_matches_golden_control_flow():
         "Apple",
         "Tesla",
     ]
+    assert comparison["routes"][0]["retrieval_query"] == (
+        "Apple fiscal year 2025 total net sales net sales"
+    )
+    assert comparison["routes"][1]["retrieval_query"] == (
+        "Tesla Q4 2025 total revenue total revenues revenue revenues"
+    )
 
     calls_before_non_retrieval = embeddings.query_calls
 
