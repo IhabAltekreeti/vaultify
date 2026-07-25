@@ -13,7 +13,7 @@ def create_groq_client(*, api_key: str) -> Groq:
 
 
 def probe_groq_connection(client: Groq, *, model: str = LLM_MODEL) -> str:
-    """Run the same small live connectivity probe used by the golden notebook."""
+    """Run a small live Groq connectivity probe for the configured model."""
     response = client.chat.completions.create(
         model=model,
         messages=[
