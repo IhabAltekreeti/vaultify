@@ -1,4 +1,4 @@
-"""Entity-routed hybrid retrieval extracted from Vaultify golden Cell 21C."""
+"""Entity-routed hybrid retrieval extracted from Vaultify golden Cells 21C–21C.1."""
 
 import re
 
@@ -19,7 +19,9 @@ DEFAULT_METRIC_EXPANSIONS = {
         "iPhone net sales",
         "iPhone",
     ],
+    # Golden Cell 21C.1 promoted the aggregate metric before the generic term.
     "net_sales": [
+        "total net sales",
         "net sales",
     ],
     "total_revenue": [
@@ -29,10 +31,10 @@ DEFAULT_METRIC_EXPANSIONS = {
         "revenues",
     ],
     "revenue": [
-        "revenue",
-        "revenues",
         "total revenue",
         "total revenues",
+        "revenue",
+        "revenues",
     ],
     "automotive_revenue": [
         "automotive revenue",
@@ -132,8 +134,12 @@ def collect_entity_chunks(entity, document_catalog, entity_registry):
                 {
                     "point_id": point_id,
                     "tenant_id": chunk_tenant or document_tenant,
-                    "filename": chunk.get("filename", document.get("filename", "unknown_document")),
-                    "document_hash": chunk.get("document_hash", document.get("document_hash")),
+                    "filename": chunk.get(
+                        "filename", document.get("filename", "unknown_document")
+                    ),
+                    "document_hash": chunk.get(
+                        "document_hash", document.get("document_hash")
+                    ),
                     "chunk_index": chunk.get("chunk_index"),
                     "chunk_type": chunk.get("chunk_type", "unknown"),
                     "section": chunk.get("section", "Unknown section"),
