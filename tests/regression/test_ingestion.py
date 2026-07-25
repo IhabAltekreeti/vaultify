@@ -157,6 +157,7 @@ def test_canonical_chunker_v2_preserves_final_safety_invariants():
             "| Metric | Value |",
             "|---|---|",
             "| Same | 1 |",
+            "",
             "| Metric | Value |",
             "|---|---|",
             "| Same | 1 |",
