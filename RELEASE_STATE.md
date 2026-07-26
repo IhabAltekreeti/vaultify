@@ -6,7 +6,7 @@
 - Golden baseline commit: `53eb736646ecf88c8551a490606014ed5307b6ae`
 - Phase 3.8 historical milestone: CLOSED
 - R1 Release Extraction: IN PROGRESS
-- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 25
+- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 26
 
 ## Source-of-truth rule
 1. Golden notebook saved code + outputs
@@ -44,6 +44,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Step 23 — authenticated MCP request layer / `ask_documents`: PASS
 - Step 24 — OAuth Authorization Server protocol core: PASS
 - Step 25 — OAuth-protected MCP resource binding: PASS
+- Step 26 — public OAuth + MCP live acceptance against real Apple V2 runtime: PASS
 
 ## Core V2 evidence
 - Apple FY2025 total net sales: `$416,161 million`
@@ -52,7 +53,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Ambiguous questions require clarification before LLM generation.
 - Outside-corpus questions return no-answer without LLM generation.
 - Runtime tenant mismatch fails closed before retrieval.
-- Steps 20–25 performed no live Qdrant writes.
+- Steps 20–26 performed no live Qdrant writes.
 
 ## Flask / ingestion status
 - Browser-controlled tenant/org values cannot override trusted membership tenant.
@@ -85,6 +86,17 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Tenant/org metadata and raw chunk text remain absent from public MCP output.
 - Step 25 dedicated regression PASS and full extracted suite PASS: `33 passed`.
 
+## Public acceptance evidence
+- Temporary Cloudflare OAuth issuer and OAuth-protected MCP endpoint were exposed from the Colab control layer only.
+- Public OAuth Authorization Server Metadata returned HTTP 200.
+- Public MCP protected-resource metadata returned HTTP 200 and advertised the correct issuer, `vaultify:mcp` scope, and Bearer header method.
+- Public DCR + PKCE S256 issued an OAuth access token without exposing connector plaintext.
+- Public MCP discovered only `ask_documents`.
+- Real public `ask_documents` returned Apple FY2025 net sales `$416,161 million` from `apple_fy2025_10k.pdf`, `Note 2 - Revenue`.
+- Public result contained no tenant/organization metadata.
+- Real Qdrant corpus load observed 745 Apple tenant chunks; Qdrant access was read-only.
+- The first immediate MCP client attempt hit a transient TaskGroup/startup race; the same live runtime subsequently passed the public MCP diagnostic without rebuild or restart. Treat the diagnostic PASS as Step 26 acceptance evidence; future acceptance harnesses should wait for the protected-resource endpoint before the first MCP client session.
+
 ## Extracted runtime surface
 - `src/vaultify/config.py`
 - `src/vaultify/extensions.py`
@@ -98,14 +110,14 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - `src/vaultify/templates/`
 - `tests/regression/`
 - `notebooks/Vaultify_R1_Control_Panel.ipynb`
+- `scripts/phase38_public_acceptance.py` (temporary acceptance harness only)
 
 ## Test-evidence boundary
 - Committed pytest covers Flask security and deterministic V2/ingestion/document/credential/connector/MCP/OAuth behavior.
-- Live Colab gates cover Qdrant/model-dependent behavior plus real tokenizer/Docling ingestion.
+- Live Colab gates cover Qdrant/model-dependent behavior, real tokenizer/Docling ingestion, and public OAuth/MCP acceptance.
 - Long-lived Colab runtimes must sync/reload changed modules or restart.
 
 ## Intentionally not extracted / completed yet
-- Cloudflare / public external acceptance runtime
 - real external Claude validation against extracted release path
 - final Phase 3.8 acceptance cleanup / revoke audit
 - production OAuth persistence / migrations
@@ -113,7 +125,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Phase 3.9 product work
 
 ## Next bounded unit
-- Step 26 — public live acceptance from the Colab control layer only: build a real Apple V2 runtime from Qdrant + MiniLM + Groq, start temporary OAuth and OAuth-protected MCP servers, expose them through temporary Cloudflare Quick Tunnels, execute DCR + PKCE + OAuth token issuance through the public endpoints, call public `ask_documents`, and verify `$416,161 million` plus Apple source attribution. No application module may own tunnel/thread launch code and no live Qdrant point may be modified.
+- Step 27 — real Claude external validation against the currently live extracted public MCP endpoint: Claude must complete OAuth discovery/DCR/PKCE, discover `ask_documents`, invoke it through the public endpoint, and return Apple FY2025 net sales `$416,161 million` with the expected source attribution. Keep the temporary runtime alive until the result is captured, then Step 28 will revoke/stop it and perform the final Phase 3.8 acceptance audit.
 
 ## Guardrails
 - Golden notebook remains immutable.
