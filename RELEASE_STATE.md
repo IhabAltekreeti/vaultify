@@ -6,8 +6,8 @@
 - Golden baseline commit: `53eb736646ecf88c8551a490606014ed5307b6ae`
 - Phase 3.8 historical milestone: CLOSED
 - Phase 3.8 extracted release-parity acceptance: CLOSED
-- R1 Release Extraction: FINALIZATION / AUDIT
-- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 28
+- R1 Release Extraction: CLOSED
+- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 29
 
 ## Source-of-truth rule
 1. Golden notebook saved code + outputs
@@ -48,6 +48,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Step 26 — public OAuth + MCP live acceptance against real Apple V2 runtime: PASS
 - Step 27 — real external Claude OAuth/MCP validation: PASS
 - Step 28 — final revoke / cleanup / Phase 3.8 acceptance audit: PASS
+- Step 29 — final structural / package / repository hygiene audit: PASS
 
 ## Core V2 evidence
 - Apple FY2025 total net sales: `$416,161 million`
@@ -56,7 +57,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Ambiguous questions require clarification before LLM generation.
 - Outside-corpus questions return no-answer without LLM generation.
 - Runtime tenant mismatch fails closed before retrieval.
-- Steps 20–28 performed no live Qdrant writes.
+- Steps 20–29 performed no live Qdrant writes.
 
 ## Connector / MCP / OAuth evidence
 - `ConnectorCredential` belongs to `Organization`; tenant identity is derived from that trusted organization.
@@ -80,7 +81,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Real public `ask_documents`: `$416,161 million`, `apple_fy2025_10k.pdf`, `Note 2 - Revenue`.
 - Real Qdrant corpus load observed 745 Apple chunks; read-only.
 - Real Claude completed Vaultify OAuth, discovered/invoked `ask_documents`, and returned the expected value/source.
-- Initial immediate MCP client startup race was isolated; the same live runtime passed without rebuild/restart. A control-layer readiness helper now exists for future runs.
+- Initial immediate MCP client startup race was isolated; the same live runtime passed without rebuild/restart. A control-layer readiness helper exists for future runs.
 - Temporary OAuth consent page is acceptance-only protocol UI, not the final product UX.
 
 ## Step 28 cleanup evidence
@@ -93,6 +94,15 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Temporary token references were cleared from notebook memory.
 - Final extracted regression gate: `33 passed in 4.53s`.
 - No live Qdrant points were modified.
+
+## Step 29 closure evidence
+- Repository working tree clean after adding Python cache rules to `.gitignore`.
+- Structural scan PASS across 30 product Python modules.
+- No Colab API, `/content/` app path, Quick Tunnel launcher, notebook thread launcher, `make_server`, Uvicorn launcher, `db.create_all()`, or hard-coded active demo tenant/file leaked into `src/vaultify`.
+- All Vaultify product modules compile.
+- Fresh-process package import smoke test PASS.
+- Acceptance-only public tunnel/thread helpers remain outside `src/vaultify`.
+- Explicit R2/R3 deployment debt remains tracked: development Flask secret, in-memory SQLite default, and `SESSION_COOKIE_SECURE=False` development default.
 
 ## Extracted runtime surface
 - `src/vaultify/config.py`
@@ -110,26 +120,22 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - `scripts/phase38_public_acceptance.py` (temporary acceptance harness only)
 - `scripts/phase38_public_readiness.py` (temporary readiness helper only)
 
-## R1 finalization still required
-- Run the structural / forbidden-runtime scan across product modules; this has NOT been claimed as done yet.
-- Run final package/import/repository hygiene audit.
-- Confirm acceptance-only tunnel/thread/in-memory OAuth helpers remain outside the product runtime boundary.
-- Freeze/archive the migration control notebook as completed extraction evidence.
-- Create the new short clean V0.1 control notebook that imports the modular repo instead of embedding product source.
+## R1 closure
+- R1 Release Extraction is CLOSED.
+- The migration/control notebook is completed extraction evidence; do not add new product features to it.
+- Preserve/archive the completed notebook and keep the golden notebook immutable.
+- Next artifact: a new short `Vaultify_V0_1_Control_Panel.ipynb` that imports the modular repo instead of embedding product source.
 
-## After R1 closes
+## Next release stages
 - R2 — production persistence / migrations, including OAuth state persistence.
 - R3 — stable deployment configuration/runtime.
 - R4 — minimal Phase 3.9 UX/product work, including branded authorization UI and preservation/porting of useful golden-notebook UI elements.
 - R5 — Phase 3.10 security/regression hardening.
 - V0.1 Technical Preview acceptance.
 
-## Next bounded unit
-- Step 29 — R1 closure audit only: structural forbidden-runtime scan + package/import/repository hygiene. Do not add new product features. If PASS, archive this migration notebook and move to the clean V0.1 control notebook.
-
 ## Guardrails
 - Golden notebook remains immutable.
-- Do not redesign working retrieval, ingestion, OAuth, MCP, or security semantics during extraction.
+- Do not redesign working retrieval, ingestion, OAuth, MCP, or security semantics during extraction follow-up.
 - Do not reintroduce Cell 23C global tenant swapping; release V2 uses explicit tenant/runtime dependencies.
 - Do not expose tenant or organization identity in the public MCP tool contract.
 - Do not make in-memory OAuth state the final release persistence layer.
