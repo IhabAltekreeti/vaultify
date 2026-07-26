@@ -1,10 +1,13 @@
-"""Minimal extracted Flask application slice used by early R1 regressions."""
+"""Minimal extracted Flask application slice used by R1 regressions."""
+
+from pathlib import Path
 
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 from vaultify.extensions import csrf, db, login_manager
 from vaultify.models import Document, Membership, QueryLog, User
+from vaultify.web.documents import register_document_routes
 from vaultify.web.tenancy import resolve_active_membership
 
 
@@ -46,10 +49,13 @@ def create_app(*, services, config=None):
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_SECURE=False,
         VAULTIFY_SERVICES=services,
+        UPLOAD_FOLDER=str(Path(app.instance_path) / "uploads"),
     )
 
     if config:
         app.config.update(config)
+
+    Path(app.config["UPLOAD_FOLDER"]).mkdir(parents=True, exist_ok=True)
 
     db.init_app(app)
     login_manager.init_app(app)
@@ -194,4 +200,5 @@ def create_app(*, services, config=None):
             sources=sources,
         )
 
+    register_document_routes(app)
     return app
