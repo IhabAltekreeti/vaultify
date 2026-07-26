@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <body>
+    <h1>Documents</h1>
+    <div id="organization">{{ current_org.name }}</div>
+    <div id="tenant">{{ current_org.tenant_id }}</div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div data-category="{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <a href="{{ url_for('upload_document') }}">Upload PDF</a>
+
+    {% if documents %}
+      <ul id="documents">
+      {% for document in documents %}
+        <li data-document-id="{{ document.id }}">
+          <span class="filename">{{ document.original_filename }}</span>
+          <span class="status">{{ document.status }}</span>
+          <span class="chunks">{{ document.chunk_count }}</span>
+
+          {% if document.status == "failed" %}
+          <form method="post" action="{{ url_for('retry_document', document_id=document.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit">Retry</button>
+          </form>
+          {% endif %}
+
+          <form method="post" action="{{ url_for('delete_document', document_id=document.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit">Delete</button>
+          </form>
+        </li>
+      {% endfor %}
+      </ul>
+    {% else %}
+      <div id="empty-documents">No documents yet</div>
+    {% endif %}
+
+    <a href="{{ url_for('dashboard') }}">Back to dashboard</a>
+  </body>
+</html>
