@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <body>
+    <h1>Upload a PDF</h1>
+    <div id="organization">{{ current_org.name }}</div>
+    <div id="tenant">{{ current_org.tenant_id }}</div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div data-category="{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="post" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input id="file" name="file" type="file" accept=".pdf,application/pdf" required>
+      <button type="submit">Upload and index</button>
+    </form>
+
+    <a href="{{ url_for('documents') }}">Back to documents</a>
+  </body>
+</html>
