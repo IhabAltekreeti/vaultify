@@ -6,7 +6,7 @@
 - Golden baseline commit: `53eb736646ecf88c8551a490606014ed5307b6ae`
 - Phase 3.8 historical milestone: CLOSED
 - R1 Release Extraction: IN PROGRESS
-- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 24
+- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 25
 
 ## Source-of-truth rule
 1. Golden notebook saved code + outputs
@@ -43,6 +43,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Step 22 — credential-bound clean V2 connector bridge: PASS
 - Step 23 — authenticated MCP request layer / `ask_documents`: PASS
 - Step 24 — OAuth Authorization Server protocol core: PASS
+- Step 25 — OAuth-protected MCP resource binding: PASS
 
 ## Core V2 evidence
 - Apple FY2025 total net sales: `$416,161 million`
@@ -51,7 +52,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Ambiguous questions require clarification before LLM generation.
 - Outside-corpus questions return no-answer without LLM generation.
 - Runtime tenant mismatch fails closed before retrieval.
-- Steps 20–24 performed no live Qdrant writes.
+- Steps 20–25 performed no live Qdrant writes.
 
 ## Flask / ingestion status
 - Browser-controlled tenant/org values cannot override trusted membership tenant.
@@ -69,19 +70,20 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - `connector_answer.py` binds connector token → active credential → trusted tenant → explicit tenant runtime → clean V2.
 - Caller cannot supply `tenant_id` or `organization_id`; runtime mismatch fails before V2.
 - Step 22 full suite: `30 passed`.
-- `mcp/server.py` builds an authenticated Streamable HTTP MCP resource server with fail-closed Bearer verification.
-- Public `ask_documents` exposes only `question`; tenant/org metadata and raw chunk text are absent from public output.
-- Missing/unknown/revoked Bearer credentials are rejected at the MCP request layer.
+- `mcp/server.py` builds the direct-connector Bearer MCP resource server; public `ask_documents` exposes only `question`.
 - Step 23 full suite: `31 passed`.
 
 ## OAuth status
 - `oauth/store.py` defines an injected persistence boundary; R1 product code owns no global in-memory OAuth database.
-- `oauth/server.py` preserves golden Cell 23H metadata, DCR, Authorization Code, PKCE S256, short-lived access tokens, rotating refresh tokens, and token revocation.
-- Public OAuth clients use `token_endpoint_auth_method=none`.
-- Authorization codes are single-use.
+- `oauth/server.py` preserves metadata, DCR, Authorization Code, PKCE S256, short-lived access tokens, rotating refresh tokens, and token revocation.
+- Public OAuth clients use `token_endpoint_auth_method=none`; authorization codes are single-use.
 - OAuth authorization-code/access-token/refresh-token secrets are stored only by SHA-256 hash.
-- Issued OAuth identity is connector-bound and connector activity is re-checked during token resolution.
-- Step 24 dedicated regression PASS and full extracted suite PASS: `32 passed`.
+- Step 24 full suite: `32 passed`.
+- `mcp/oauth_server.py` binds OAuth access tokens to the exact MCP resource and trusted connector identity.
+- Missing/unknown/raw-connector/wrong-resource/revoked OAuth credentials fail closed before retrieval.
+- Apple and Tesla OAuth grants resolve different trusted tenants; connector and OAuth revocation take effect immediately.
+- Tenant/org metadata and raw chunk text remain absent from public MCP output.
+- Step 25 dedicated regression PASS and full extracted suite PASS: `33 passed`.
 
 ## Extracted runtime surface
 - `src/vaultify/config.py`
@@ -90,6 +92,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - `src/vaultify/web/`
 - `src/vaultify/services/`
 - `src/vaultify/mcp/server.py`
+- `src/vaultify/mcp/oauth_server.py`
 - `src/vaultify/oauth/store.py`
 - `src/vaultify/oauth/server.py`
 - `src/vaultify/templates/`
@@ -102,15 +105,15 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Long-lived Colab runtimes must sync/reload changed modules or restart.
 
 ## Intentionally not extracted / completed yet
-- OAuth-protected MCP access-token verifier / resource binding
 - Cloudflare / public external acceptance runtime
 - real external Claude validation against extracted release path
-- production persistence / migrations
+- final Phase 3.8 acceptance cleanup / revoke audit
+- production OAuth persistence / migrations
 - stable deployment configuration
 - Phase 3.9 product work
 
 ## Next bounded unit
-- Step 25 — bind OAuth access tokens to the MCP resource server: validate token hash/state, scope and exact resource binding, re-check ConnectorCredential identity on every request, resolve the trusted tenant runtime, preserve the public `ask_documents(question)` contract, and prove connector/OAuth revocation plus Apple/Tesla isolation without a public tunnel.
+- Step 26 — public live acceptance from the Colab control layer only: build a real Apple V2 runtime from Qdrant + MiniLM + Groq, start temporary OAuth and OAuth-protected MCP servers, expose them through temporary Cloudflare Quick Tunnels, execute DCR + PKCE + OAuth token issuance through the public endpoints, call public `ask_documents`, and verify `$416,161 million` plus Apple source attribution. No application module may own tunnel/thread launch code and no live Qdrant point may be modified.
 
 ## Guardrails
 - Golden notebook remains immutable.
