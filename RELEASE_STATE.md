@@ -6,7 +6,7 @@
 - Golden baseline commit: `53eb736646ecf88c8551a490606014ed5307b6ae`
 - Phase 3.8 historical milestone: CLOSED
 - R1 Release Extraction: IN PROGRESS
-- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 18
+- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 19
 
 ## Source-of-truth rule
 1. Golden notebook saved code + outputs
@@ -37,6 +37,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Step 16 — context-aware financial unit resolution: PASS
 - Step 17 — clean V2 Flask compatibility adapter: PASS
 - Step 18 — real Flask `test_client()` → clean V2 integration: PASS
+- Step 19 — canonical V2 ingestion core + real tokenizer/Docling gate: PASS
 
 ## Core V2 engine status
 Golden Cell 21 series is represented in clean modules:
@@ -55,7 +56,7 @@ Golden Cell 21 series is represented in clean modules:
 - Ambiguous questions require clarification before LLM generation.
 - Outside-corpus questions return no-answer without LLM generation.
 - Runtime tenant mismatch fails closed before retrieval.
-- No Step 7–18 regression created, updated, or deleted Qdrant points.
+- No Step 7–19 validation modified live Qdrant points unless the test explicitly used an in-memory/fake client.
 
 ### Unit-resolution parity
 - Apple selected evidence originally lacked explicit scale in the same chunk.
@@ -67,10 +68,18 @@ Golden Cell 21 series is represented in clean modules:
 - Browser-controlled tenant/org values cannot override trusted membership tenant.
 - Historical canonical Cell 22D did not exist as a saved notebook cell; the extracted clean regression is its replacement evidence, not a reconstructed historical cell.
 - Step 17 adapter converts clean V2 source cards into the Flask `results` contract.
-- Step 18 committed regression PASS after correcting a synthetic Tesla fixture to canonical table evidence.
 - Step 18 live PASS: login → trusted membership → `/ask` → clean V2 → rendered sources → `QueryLog`.
 - Live filenames are registry-driven (`TSLA-Q4-2025-Update.pdf` in the current corpus), not hardcoded product behavior.
 - Browser session/form tenant tampering could not change the trusted tenant selected by Flask.
+
+## Ingestion status
+- `src/vaultify/services/ingestion.py` now contains canonical PDF validation, SHA-256 hashing, Canonical Chunker V2, Docling conversion, deterministic point IDs, tenant/document Qdrant filters, safe replace-on-reindex behavior, and failure cleanup.
+- Committed ingestion regressions PASS, including fake-Qdrant replace/cleanup behavior.
+- A dedicated retokenization regression protects the oversized-table-row decode → re-tokenize edge case.
+- Real MiniLM tokenizer live gate PASS with a maximum generated chunk size of exactly `240 / 240` tokens.
+- Oversized table rows split safely; Markdown separator rows are removed; exact duplicate chunks are suppressed.
+- Real Docling converter construction PASS.
+- Step 19 live gate performed no Qdrant writes.
 
 ## Extracted runtime surface
 - `src/vaultify/config.py`
@@ -90,16 +99,17 @@ Golden Cell 21 series is represented in clean modules:
 - `src/vaultify/services/grounded_answer.py`
 - `src/vaultify/services/unit_resolution.py`
 - `src/vaultify/services/answer_service.py`
+- `src/vaultify/services/ingestion.py`
 - `tests/regression/`
 - `notebooks/Vaultify_R1_Control_Panel.ipynb`
 
 ## Test-evidence boundary
-- Committed pytest covers Flask request-flow security plus deterministic analyzer/catalog/routing/evidence/unit/adapter/Flask-V2 behavior.
-- Live Colab regressions cover Qdrant/model-dependent behavior.
-- Long-lived Colab runtimes must reload changed modules after `git pull` or restart the runtime.
+- Committed pytest covers Flask request-flow security plus deterministic analyzer/catalog/routing/evidence/unit/adapter/Flask-V2/ingestion behavior.
+- Live Colab regressions cover Qdrant/model-dependent behavior plus the real tokenizer/Docling ingestion gate.
+- Long-lived Colab runtimes must reload changed modules after Git sync or restart the runtime.
+- Fresh Colab setup now requires `filetype` and `docling` in addition to the previously extracted runtime/test dependencies.
 
 ## Intentionally not extracted / completed yet
-- canonical V2 ingestion core / Docling / OCR
 - upload and full document-management routes
 - ConnectorCredential release model
 - OAuth
@@ -110,7 +120,7 @@ Golden Cell 21 series is represented in clean modules:
 - Phase 3.9 product work
 
 ## Next bounded unit
-- Step 19 — extract the final approved canonical ingestion core: PDF validation, Canonical Chunker V2, deterministic tenant/document payloads, safe replace-on-reindex behavior, and failure cleanup.
+- Step 20 — clean Flask upload/document-management slice using the trusted organization/tenant path and the extracted ingestion service.
 
 ## Guardrails
 - Golden notebook remains immutable.
