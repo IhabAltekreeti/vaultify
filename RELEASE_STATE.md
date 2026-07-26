@@ -6,7 +6,7 @@
 - Golden baseline commit: `53eb736646ecf88c8551a490606014ed5307b6ae`
 - Phase 3.8 historical milestone: CLOSED
 - R1 Release Extraction: IN PROGRESS
-- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 22
+- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 23
 
 ## Source-of-truth rule
 1. Golden notebook saved code + outputs
@@ -41,6 +41,7 @@ The golden notebook remains immutable. The Python export is derived and may cont
 - Step 20 — trusted Flask upload/document-management slice: PASS
 - Step 21 — organization-scoped ConnectorCredential foundation: PASS
 - Step 22 — credential-bound clean V2 connector bridge: PASS
+- Step 23 — authenticated MCP request layer / `ask_documents`: PASS
 
 ## Core V2 engine status
 Golden Cell 21 series is represented in clean modules:
@@ -52,44 +53,36 @@ Golden Cell 21 series is represented in clean modules:
 - Cell 21E → grounded answer generation / `answer_question_v2`
 - Cell 21E.1 → context-aware unit resolution
 
-### Critical live evidence
+### Critical evidence
 - Apple FY2025 total net sales: `$416,161 million`
 - Tesla Q4 2025 total revenue: `$24,901 million`
 - Comparison preserves both values and reporting-period warning.
 - Ambiguous questions require clarification before LLM generation.
 - Outside-corpus questions return no-answer without LLM generation.
 - Runtime tenant mismatch fails closed before retrieval.
-- No Step 7–22 validation modified live Qdrant points unless explicitly using a live read-only gate; Steps 20–22 used no live Qdrant writes.
+- Steps 20–23 performed no live Qdrant writes.
 
-## Flask / web integration status
+## Flask / ingestion status
 - Browser-controlled tenant/org values cannot override trusted membership tenant.
-- Historical canonical Cell 22D did not exist as a saved notebook cell; the extracted clean regression is its replacement evidence, not a reconstructed historical cell.
-- Step 17 adapter converts clean V2 source cards into the Flask `results` contract.
+- Historical canonical Cell 22D did not exist as a saved notebook cell; extracted regression is replacement evidence only.
 - Step 18 live PASS: login → trusted membership → `/ask` → clean V2 → rendered sources → `QueryLog`.
-- Step 20 adds `/documents`, `/documents/upload`, retry, and delete through the trusted organization path.
-- Upload duplicate protection is scoped by organization + document hash.
-- Cross-organization retry/delete document IDs are rejected.
-- Delete targets only the trusted tenant/document hash.
-- Step 20 dedicated regression PASS and then-full extracted suite PASS: `28 passed`.
+- Step 20 adds trusted `/documents`, upload, retry, and delete; cross-org document IDs are rejected.
+- `src/vaultify/services/ingestion.py` contains canonical PDF validation, SHA-256 hashing, Canonical Chunker V2, Docling conversion, deterministic point IDs, tenant/document filters, safe replace-on-reindex, and failure cleanup.
+- Real MiniLM tokenizer gate PASS at exactly `240 / 240` tokens; real Docling converter construction PASS.
 
-## Ingestion status
-- `src/vaultify/services/ingestion.py` contains canonical PDF validation, SHA-256 hashing, Canonical Chunker V2, Docling conversion, deterministic point IDs, tenant/document Qdrant filters, safe replace-on-reindex behavior, and failure cleanup.
-- Dedicated retokenization regression protects the oversized-table-row decode → re-tokenize edge case.
-- Real MiniLM tokenizer live gate PASS with maximum generated chunk size exactly `240 / 240` tokens.
-- Real Docling converter construction PASS.
-- Step 19 live gate performed no Qdrant writes.
-
-## Connector credential / V2 status
-- `ConnectorCredential` belongs to `Organization`; tenant identity is derived from that trusted organization.
-- Only SHA-256 token hashes plus a safe display prefix are persisted; plaintext connector tokens are not stored.
+## Connector / MCP status
+- `ConnectorCredential` belongs to `Organization`; tenant identity is derived from that organization.
+- Only SHA-256 connector-token hashes plus a safe display prefix are persisted; plaintext connector tokens are not stored.
 - Active lookup, unknown-token rejection, revocation, rotation, and `last_used_at` tracking are extracted.
-- Step 21 dedicated regression PASS and full extracted regression suite PASS: `29 passed`.
-- `src/vaultify/services/connector_answer.py` binds raw connector token → active credential → organization tenant → explicit tenant runtime → clean `answer_question_v2`.
-- The connector caller cannot supply `tenant_id` or `organization_id`.
-- Apple and Tesla credentials can resolve different trusted runtimes.
-- Unknown/revoked credentials fail before runtime resolution/retrieval.
-- Runtime tenant mismatch fails before V2 execution.
-- Step 22 dedicated regression PASS and full extracted regression suite PASS: `30 passed`.
+- Step 21 full suite: `29 passed`.
+- `connector_answer.py` binds connector token → active credential → trusted tenant → explicit tenant runtime → clean V2.
+- Caller cannot supply `tenant_id` or `organization_id`; runtime mismatch fails before V2.
+- Step 22 full suite: `30 passed`.
+- `mcp/server.py` builds an authenticated Streamable HTTP MCP resource server with fail-closed Bearer verification.
+- Public `ask_documents` exposes only `question`; tenant/org metadata and raw chunk text are absent from public output.
+- Missing/unknown/revoked Bearer credentials are rejected at the MCP request layer.
+- Apple and Tesla credentials reach different trusted tenants.
+- Step 23 dedicated regression PASS and full extracted suite PASS: `31 passed`.
 
 ## Extracted runtime surface
 - `src/vaultify/config.py`
@@ -113,33 +106,34 @@ Golden Cell 21 series is represented in clean modules:
 - `src/vaultify/services/ingestion.py`
 - `src/vaultify/services/connector_credentials.py`
 - `src/vaultify/services/connector_answer.py`
+- `src/vaultify/mcp/server.py`
 - `src/vaultify/templates/documents.html`
 - `src/vaultify/templates/upload.html`
 - `tests/regression/`
 - `notebooks/Vaultify_R1_Control_Panel.ipynb`
 
 ## Test-evidence boundary
-- Committed pytest covers Flask security plus deterministic analyzer/catalog/routing/evidence/unit/adapter/Flask-V2/ingestion/document-management/credential/connector-V2 behavior.
-- Live Colab regressions cover Qdrant/model-dependent behavior plus the real tokenizer/Docling ingestion gate.
-- Long-lived Colab runtimes must reload changed modules after Git sync or restart the runtime.
+- Committed pytest covers Flask security and deterministic V2/ingestion/document/credential/connector/MCP behavior.
+- Live Colab gates cover Qdrant/model-dependent behavior plus real tokenizer/Docling ingestion.
+- Long-lived Colab runtimes must sync/reload changed modules or restart.
 
 ## Intentionally not extracted / completed yet
-- authenticated MCP request layer / `ask_documents`
-- OAuth Authorization Server / PKCE / DCR
-- OAuth-protected MCP
+- OAuth Authorization Server / PKCE / DCR / refresh rotation / OAuth revocation
+- OAuth-protected MCP access-token verifier
 - Cloudflare / public external acceptance runtime
 - production persistence / migrations
 - stable deployment configuration
 - Phase 3.9 product work
 
 ## Next bounded unit
-- Step 23 — authenticated MCP request layer: HTTP Bearer token → fail-closed TokenVerifier → request auth context → credential-bound clean V2 `ask_documents`; client-controlled tenant/org arguments and tenant/org response metadata remain absent.
+- Step 24 — extract the OAuth Authorization Server protocol core proven in golden Cell 23H: metadata, Dynamic Client Registration, Authorization Code + PKCE S256, short-lived access tokens, rotating refresh tokens, revocation, and connector-bound authorization identity. Product code must use an injected state-store interface; an in-memory store may be used only by regression tests until R2 persistence.
 
 ## Guardrails
 - Golden notebook remains immutable.
-- Do not redesign working retrieval, ingestion, OAuth, MCP, or security behavior during extraction.
+- Do not redesign working retrieval, ingestion, OAuth, MCP, or security semantics during extraction.
 - Do not reintroduce Cell 23C global tenant swapping; release V2 uses explicit tenant/runtime dependencies.
 - Do not expose tenant or organization identity in the public MCP tool contract.
-- Split by responsibility, not arbitrary line count.
-- Continue as one bounded extraction unit → regression → PASS/FAIL → next unit.
+- Do not make in-memory OAuth state the final release persistence layer.
+- Do not add Quick Tunnel/thread launcher code to application modules.
+- Continue one bounded extraction unit → regression → PASS/FAIL → next unit.
 - Apple/Tesla remain regression fixtures; runtime services accept dynamic tenant data and registries.
