@@ -3,9 +3,9 @@
 The release implementation preserves the final active Cell 20A/20C behavior while
 replacing notebook globals and runtime monkey-patches with explicit dependencies.
 The only post-golden hardening here is a bounded oversized-table-row fitting guard:
-some tokenizers can decode a token slice into text that retokenizes to a few more
-embedding tokens than the original slice. The guard shrinks only that oversized row
-piece until the final serialized chunk is within the same 240-token limit.
+some tokenizers can decode a token slice into text that retokenizes to more embedding
+tokens than the original slice. The guard shrinks only that oversized row piece until
+the final serialized chunk is within the same 240-token limit.
 """
 
 from __future__ import annotations
@@ -233,14 +233,13 @@ class CanonicalChunkerV2:
         return chunks
 
     def split_oversized_table_row(self, row, table_prefix, section):
-        """Split one oversized row while validating the final serialized token count.
+        """Split an oversized row and validate the final serialized token count.
 
-        Golden Cell 20A budgeted the row using raw token IDs, decoded each slice, then
-        re-tokenized the final prefix+row text. With a real WordPiece tokenizer that
-        decode/re-tokenize round-trip is not guaranteed to be token-count idempotent.
-        We therefore keep the same initial budget, but shrink only a failing row slice
-        until the *final* serialized chunk fits. The next slice starts after exactly the
-        original token IDs consumed by the accepted piece, so no row IDs are skipped.
+        Golden Cell 20A budgets with raw token IDs. A real tokenizer may decode a raw
+        slice into text that re-tokenizes to more tokens. Start from the golden budget,
+        then shrink only the failing row slice. Shrinkage is bounded to at most half of
+        the current slice in one iteration so a large overflow cannot incorrectly jump
+        straight to zero. Accepted slices advance by exactly the raw token IDs consumed.
         """
         prefix_with_newline = table_prefix.rstrip() + "\n"
         prefix_token_count = self.count_raw_tokens(prefix_with_newline)
@@ -280,8 +279,13 @@ class CanonicalChunkerV2:
                     accepted_size = slice_size
                     break
 
+                if slice_size == 1:
+                    break
+
                 overflow = candidate_token_count - self.max_chunk_tokens
-                slice_size -= max(1, overflow)
+                maximum_shrink = max(1, slice_size // 2)
+                shrink = min(maximum_shrink, max(1, overflow))
+                slice_size -= shrink
 
             if accepted_text is None or accepted_size is None:
                 raise RuntimeError(
