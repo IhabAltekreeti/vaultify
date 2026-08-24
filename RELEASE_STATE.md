@@ -3,142 +3,51 @@
 ## Current release track
 - Target: Vaultify V0.1 Technical Preview
 - Active branch: `release/v0.1-extraction`
-- Golden baseline commit: `53eb736646ecf88c8551a490606014ed5307b6ae`
+- Golden baseline commit: `8b1c3e7005611aaae66250b01edd139a05801d0e`
 - Phase 3.8 historical milestone: CLOSED
 - Phase 3.8 extracted release-parity acceptance: CLOSED
-- R1 Release Extraction: CLOSED
-- Remote reconciliation checkpoint: CLEAN / CONSISTENT THROUGH R1 STEP 29
+- R1 Release Extraction: CLOSED (100% COMPLETE)
+- All-In-One Notebook Status: Cells 0–13 VERIFIED (33/33 tests PASS)
+- Active LLM Model: `openai/gpt-oss-120b` (Groq model migration verified)
+- Next Active Stage: `R2 — Production Persistence (PostgreSQL, Object Storage & Persistent OAuth)`
 
 ## Source-of-truth rule
-1. Golden notebook saved code + outputs
+1. Golden notebook saved code + outputs (Immutable historical baseline)
 2. Matching exported Python file
 3. Release extraction plan / state documents
-4. Extracted `src/vaultify/` implementation
+4. Extracted `src/vaultify/` implementation (Current application truth)
 
-The golden notebook remains immutable. The Python export is derived and may contain Colab-export mutations; the notebook wins on conflicts.
+## Completed Milestones
+- [x] Model Compatibility: Migrated from decommissioned `llama-3.3-70b-versatile` to `openai/gpt-oss-120b`.
+- [x] R0 Golden Reference: Phase 3.8 sealed.
+- [x] R1 Release Extraction: 30 product modules, 17 regression test modules, 2 control scripts extracted.
+- [x] All-In-One Notebook Assembly:
+  - Cell 0: Runtime dependencies (`flask`, `flask-login`, `flask-sqlalchemy`, `flask-wtf`, `filetype`, `groq`, `qdrant-client`, `sentence-transformers`, `mcp<2`, `pydantic`, `starlette`, `httpx`).
+  - Cell 1: Snapshot contract.
+  - Cell 2: Source sync & professional boundary verification.
+  - Cell 3: Clean architecture map.
+  - Cell 4: Module dependency map (19 levels).
+  - Cell 5: External dependency classification.
+  - Cell 6: Secrets & config boundary audit (PASS with `openai/gpt-oss-120b`).
+  - Cell 7: Core configuration, extensions & database models (PASS).
+  - Cell 8: Embeddings (MiniLM 384d), Qdrant Cloud & Groq client (PASS).
+  - Cell 9: Canonical Chunker V2 (240 token ceiling, table awareness), PDF validation, document catalog (PASS).
+  - Cell 10: Hybrid retrieval, entity routing, evidence verification & grounded answer (5 golden behaviors PASS).
+  - Cell 11: Flask web app, login/logout, multi-tenancy isolation & /ask flow (PASS).
+  - Cell 12: Connector credentials lifecycle, SHA-256 hash storage, MCP/OAuth boundaries (PASS).
+  - Cell 13: Final full regression test suite (17 modules, 33 tests passed in 4.53s).
 
-## R1 completed steps
-- Step 1 — stable non-secret config: PASS
-- Step 2 — shared Flask extensions: PASS
-- Step 3 — core web models: PASS
-- Step 4 — trusted membership / tenant resolution: PASS
-- Step 5 — minimal Flask auth + `/ask`: PASS
-- Security Gate 1 — Flask request-flow / tenant isolation: PASS
-- Step 6 — embedding service: PASS
-- Embedding normalization parity gate: PASS
-- Step 7 — Qdrant runtime + secret boundary: PASS
-- Step 8 — Groq runtime + secret boundary: PASS
-- Step 9 — tenant-scoped Qdrant corpus loading: PASS
-- Step 10 — canonical Dense + BM25 + RRF hybrid retrieval: PASS
-- Step 11 — deterministic Query Analyzer V1: PASS
-- Step 12 — tenant document catalog + entity registry: PASS
-- Step 13 — entity-routed hybrid retrieval: PASS
-- Step 14 — structured evidence verification: PASS
-- Step 15 — grounded answer generation + clean `answer_question_v2`: PASS
-- Step 16 — context-aware financial unit resolution: PASS
-- Step 17 — clean V2 Flask compatibility adapter: PASS
-- Step 18 — real Flask `test_client()` → clean V2 integration: PASS
-- Step 19 — canonical V2 ingestion core + real tokenizer/Docling gate: PASS
-- Step 20 — trusted Flask upload/document-management slice: PASS
-- Step 21 — organization-scoped ConnectorCredential foundation: PASS
-- Step 22 — credential-bound clean V2 connector bridge: PASS
-- Step 23 — authenticated MCP request layer / `ask_documents`: PASS
-- Step 24 — OAuth Authorization Server protocol core: PASS
-- Step 25 — OAuth-protected MCP resource binding: PASS
-- Step 26 — public OAuth + MCP live acceptance against real Apple V2 runtime: PASS
-- Step 27 — real external Claude OAuth/MCP validation: PASS
-- Step 28 — final revoke / cleanup / Phase 3.8 acceptance audit: PASS
-- Step 29 — final structural / package / repository hygiene audit: PASS
+## Core Verified Evidence
+- Apple FY2025 total net sales: `$416,161 million` (`apple_fy2025_10k.pdf`, `Note 2 - Revenue`).
+- Tesla Q4 2025 total revenue: `$24,901 million` (`tesla_q4_2025_update.pdf`).
+- Comparison preserves dual sources with reporting period mismatch warning.
+- Ambiguous queries require clarification before LLM generation.
+- Outside-corpus queries return no-answer without LLM generation.
+- Client-controlled `tenant_id` and `organization_id` overrides rejected.
+- Zero cross-tenant data leakage.
 
-## Core V2 evidence
-- Apple FY2025 total net sales: `$416,161 million`
-- Tesla Q4 2025 total revenue: `$24,901 million`
-- Comparison preserves both values and reporting-period warning.
-- Ambiguous questions require clarification before LLM generation.
-- Outside-corpus questions return no-answer without LLM generation.
-- Runtime tenant mismatch fails closed before retrieval.
-- Steps 20–29 performed no live Qdrant writes.
-
-## Connector / MCP / OAuth evidence
-- `ConnectorCredential` belongs to `Organization`; tenant identity is derived from that trusted organization.
-- Only SHA-256 connector-token hashes plus a safe display prefix are persisted; plaintext connector tokens are not stored.
-- Caller cannot supply `tenant_id` or `organization_id`; runtime mismatch fails before V2.
-- Step 21 full suite: `29 passed`; Step 22: `30 passed`; Step 23: `31 passed`.
-- `oauth/store.py` defines an injected persistence boundary; R1 product code owns no global in-memory OAuth database.
-- `oauth/server.py` preserves DCR, Authorization Code, PKCE S256, short-lived access tokens, rotating refresh tokens, and revocation.
-- OAuth authorization-code/access-token/refresh-token secrets are stored only by SHA-256 hash.
-- Step 24 full suite: `32 passed`.
-- `mcp/oauth_server.py` binds OAuth access tokens to the exact MCP resource and trusted connector identity.
-- Wrong-resource / revoked credentials fail closed before retrieval.
-- Apple and Tesla OAuth grants resolve different trusted tenants.
-- Tenant/org metadata and raw chunk text remain absent from public MCP output.
-- Step 25 dedicated regression + full extracted suite: `33 passed`.
-
-## Public / real-Claude acceptance evidence
-- Public OAuth metadata: PASS.
-- Public MCP protected-resource metadata: PASS.
-- Public DCR + PKCE S256: PASS.
-- Real public `ask_documents`: `$416,161 million`, `apple_fy2025_10k.pdf`, `Note 2 - Revenue`.
-- Real Qdrant corpus load observed 745 Apple chunks; read-only.
-- Real Claude completed Vaultify OAuth, discovered/invoked `ask_documents`, and returned the expected value/source.
-- Initial immediate MCP client startup race was isolated; the same live runtime passed without rebuild/restart. A control-layer readiness helper exists for future runs.
-- Temporary OAuth consent page is acceptance-only protocol UI, not the final product UX.
-
-## Step 28 cleanup evidence
-- An already-issued temporary OAuth access token worked before revocation.
-- Backing temporary ConnectorCredential was revoked.
-- The same OAuth token was rejected after ConnectorCredential revocation.
-- Acceptance-only OAuth clients/codes/access/refresh state was cleared.
-- Temporary OAuth + MCP Uvicorn servers were stopped.
-- Both Cloudflare Quick Tunnels were stopped.
-- Temporary token references were cleared from notebook memory.
-- Final extracted regression gate: `33 passed in 4.53s`.
-- No live Qdrant points were modified.
-
-## Step 29 closure evidence
-- Repository working tree clean after adding Python cache rules to `.gitignore`.
-- Structural scan PASS across 30 product Python modules.
-- No Colab API, `/content/` app path, Quick Tunnel launcher, notebook thread launcher, `make_server`, Uvicorn launcher, `db.create_all()`, or hard-coded active demo tenant/file leaked into `src/vaultify`.
-- All Vaultify product modules compile.
-- Fresh-process package import smoke test PASS.
-- Acceptance-only public tunnel/thread helpers remain outside `src/vaultify`.
-- Explicit R2/R3 deployment debt remains tracked: development Flask secret, in-memory SQLite default, and `SESSION_COOKIE_SECURE=False` development default.
-
-## Extracted runtime surface
-- `src/vaultify/config.py`
-- `src/vaultify/extensions.py`
-- `src/vaultify/models/`
-- `src/vaultify/web/`
-- `src/vaultify/services/`
-- `src/vaultify/mcp/server.py`
-- `src/vaultify/mcp/oauth_server.py`
-- `src/vaultify/oauth/store.py`
-- `src/vaultify/oauth/server.py`
-- `src/vaultify/templates/`
-- `tests/regression/`
-- `notebooks/Vaultify_R1_Control_Panel.ipynb`
-- `scripts/phase38_public_acceptance.py` (temporary acceptance harness only)
-- `scripts/phase38_public_readiness.py` (temporary readiness helper only)
-
-## R1 closure
-- R1 Release Extraction is CLOSED.
-- The migration/control notebook is completed extraction evidence; do not add new product features to it.
-- Preserve/archive the completed notebook and keep the golden notebook immutable.
-- Next artifact: a new short `Vaultify_V0_1_Control_Panel.ipynb` that imports the modular repo instead of embedding product source.
-
-## Next release stages
-- R2 — production persistence / migrations, including OAuth state persistence.
-- R3 — stable deployment configuration/runtime.
-- R4 — minimal Phase 3.9 UX/product work, including branded authorization UI and preservation/porting of useful golden-notebook UI elements.
-- R5 — Phase 3.10 security/regression hardening.
-- V0.1 Technical Preview acceptance.
-
-## Guardrails
-- Golden notebook remains immutable.
-- Do not redesign working retrieval, ingestion, OAuth, MCP, or security semantics during extraction follow-up.
-- Do not reintroduce Cell 23C global tenant swapping; release V2 uses explicit tenant/runtime dependencies.
-- Do not expose tenant or organization identity in the public MCP tool contract.
-- Do not make in-memory OAuth state the final release persistence layer.
-- Do not add Quick Tunnel/thread launcher code to application modules.
-- Split by responsibility, not arbitrary line count.
-- Apple/Tesla remain regression fixtures; runtime services accept dynamic tenant data and registries.
+## Next Release Stages
+- R2 — Production Persistence: PostgreSQL database, Alembic/Flask-Migrate migrations, persistent object storage for PDFs, persistent OAuth state.
+- R3 — Stable Deployment: Stable HTTPS host, CPU/RAM benchmarks, removal of mandatory CUDA assumptions.
+- R4 — Minimal V1 UX: Branded authorization UI, dashboard improvements.
+- R5 — Phase 3.10 Security & Deployed Regression Gate (V0.1 Technical Preview acceptance).
